@@ -92,7 +92,7 @@ function onRx(e){rx=performance.now();const m=new TextDecoder().decode(e.target.
   if(performance.now()-lastSend>1500)S.bpm=+b;ui()}}
 async function connect(){$('msg').textContent='';
  if(!navigator.bluetooth){$('msg').textContent='Este navegador no soporta Bluetooth. Usa Chrome en Android (o Bluefy en iPhone).';return}
- try{dev=await navigator.bluetooth.requestDevice({filters:[{services:[SVC]}]});demo=false;
+ try{dev=await navigator.bluetooth.requestDevice({filters:[{services:[SVC]},{namePrefix:'CardioSim'}],optionalServices:[SVC]});demo=false;
   dev.addEventListener('gattserverdisconnected',reconnect);conn('warn','Conectando…');await link();keepAwake()}
  catch(e){conn('','Sin conexión');$('msg').textContent='No se pudo conectar. Enciende el ESP32, acércalo e inténtalo de nuevo.'}}
 // Vigilante: si pasan 4 s sin noticias del ESP32, fuerza reconexión
@@ -104,7 +104,8 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 $('con').onclick=connect;
 $('dem').onclick=()=>{demo=true;dev=null;chCmd=null;conn('demo','Modo demo');keepAwake();ui()};
 $('pw').onclick=()=>{S.on=!S.on;ui();send(S.on?'ON':'OFF')};
-$('rng').oninput=e=>{setBpm(+e.target.value);clearTimeout(tm);tm=setTimeout(()=>send('B:'+S.bpm),90)};
+$('rng').oninput=e=>{setBpm(+e.target.value);if(!tm)tm=setTimeout(()=>{tm=0;send('B:'+S.bpm)},70)};
+$('rng').onchange=()=>send('B:'+S.bpm);
 const go=()=>{const v=parseFloat($('num').value);if(isNaN(v))return;setBpm(v);send('B:'+S.bpm);$('num').value='';$('num').blur()};
 $('go').onclick=go;$('num').onkeydown=e=>{if(e.key==='Enter')go()};
 document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{setBpm(+b.dataset.v);send('B:'+S.bpm)});
