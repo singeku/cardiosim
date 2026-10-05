@@ -39,10 +39,37 @@ button{font:inherit}
 .cn{display:flex;gap:8px}.cn .b{flex:1}
 #msg{font-size:13px;color:#fbbf24;text-align:center;min-height:1em}
 #toff{color:var(--mut);font-size:13px;margin-top:2px}
+.pane{display:flex;flex-direction:column;gap:12px}[hidden]{display:none!important}
+.tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:4px}
+.tabs button{flex:1;border:0;background:none;color:var(--mut);padding:10px;border-radius:12px;font-weight:700;cursor:pointer;transition:.25s}
+.tabs button.on{background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c)}
+.chip2{display:inline-flex;gap:8px;align-items:center;font-size:13px;color:var(--mut);background:var(--card);border:1px solid var(--line);padding:6px 12px;border-radius:99px}
+.chip2 .d{width:9px;height:9px;border-radius:50%;background:#64748b}
+.chip2.ok .d{background:#34d399;box-shadow:0 0 8px #34d399}.chip2.warn .d{background:#fbbf24;animation:b 1s infinite}
+.ring{position:relative;width:132px;height:132px;flex:none}.ring svg{transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:9}.ring .t{stroke:var(--line)}
+.ring .p{stroke:var(--c);stroke-linecap:round;filter:drop-shadow(0 0 6px var(--c));transition:stroke-dashoffset .9s linear,stroke .4s}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:42px;font-weight:800;font-variant-numeric:tabular-nums}
+.ring i{position:absolute;left:0;right:0;bottom:24px;text-align:center;font-style:normal;font-size:12px;color:var(--mut)}
+.kv{flex:1;min-width:0}.kv .v{font-size:40px;font-weight:800;color:var(--c);line-height:1.1;text-shadow:0 0 22px color-mix(in srgb,var(--c) 50%,transparent)}
+.kv .u{font-size:12px;text-transform:uppercase;letter-spacing:.7px}
+#hm{width:40px;height:40px;fill:var(--c);filter:drop-shadow(0 0 10px var(--c));flex:none}#hm.beat{animation:p .28s ease-out}
 </style></head><body class="s1"><div class="w">
 <header><h1>CardioSim</h1><div id="chip"><span id="dot"></span><span id="ct">Sin conexión</span></div></header>
+<div class="tabs"><button id="tS" class="on">Simulador</button><button id="tM">Monitor</button></div>
 
-<div class="card hero">
+
+<div id="vm" class="pane" hidden>
+ <div class="card row" style="gap:16px">
+  <div class="ring"><svg viewBox="0 0 120 120" width="132" height="132"><circle class="t" cx="60" cy="60" r="52"/><circle class="p" id="rp" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="0"/></svg><b id="mt">60</b><i>segundos</i></div>
+  <div class="kv"><div class="u" id="ml">Pulsos contados</div><div class="v"><span id="mf">--</span> <span class="u" id="mu">pulsos</span></div>
+   <div class="u" style="margin-top:10px">Diagnóstico</div><div id="md" style="font-size:22px;font-weight:700;color:var(--c)">Listo</div></div>
+ </div>
+ <div class="card row"><svg id="hm" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 2.7 4.5 6.4 4.5c2.2 0 3.8 1.3 5.6 3.4 1.8-2.1 3.4-3.4 5.6-3.4 3.7 0 5.5 3.8 4 7.2C19.5 16.4 12 21 12 21z"/></svg>
+  <div style="flex:1"><b id="ms">Presiona START para medir</b><div class="u">Cuenta los pulsos durante 60 s</div></div>
+  <button class="b" id="mst" style="padding:16px 22px;font-size:17px">▶ START</button></div>
+</div>
+<div class="card hero" id="vs">
  <svg id="heart" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.300 2.700 4.500 6.400 4.500c2.200 0 3.800 1.300 5.600 3.400 1.800-2.100 3.400-3.400 5.600-3.400 3.700 0 5.500 3.800 4 7.200C19.500 16.400 12 21 12 21z"/></svg>
  <div><div><span id="bpm">--</span> <span class="u">ppm</span></div><div id="est">Apagado</div><div id="toff"></div></div>
 </div>
@@ -51,7 +78,7 @@ button{font:inherit}
 
 <div class="card">
  <div class="row"><button id="pw" aria-label="Encender o apagar">⏻</button>
-  <div style="flex:1"><b>Simulador</b><div class="u" id="pwt">Apagado</div></div></div>
+  <div style="flex:1"><b>Paciente simulado</b><div class="u" id="pwt">Apagado</div></div></div>
  <input type="range" id="rng" min="30" max="120" value="75">
  <div class="sc"><span>30 · Bradicardia</span><span>Normal</span><span>Taquicardia · 120</span></div>
  <div class="in"><input type="number" id="num" inputmode="numeric" min="30" max="120" placeholder="Escribe un valor (30–120)"><button class="b" id="go">Enviar</button></div>
@@ -78,7 +105,7 @@ function setBpm(b){S.bpm=Math.max(30,Math.min(120,Math.round(b)));ui()}
 function send(c){lastSend=performance.now();if(!chCmd)return;const d=new TextEncoder().encode(c);
  q=q.then(()=>(chCmd.writeValueWithoutResponse||chCmd.writeValue).call(chCmd,d)).catch(()=>{})}
 function beat(){beats.push(performance.now()/1000);if(beats.length>40)beats.shift();
- const h=$('heart');h.classList.remove('beat');void h.getBBox();h.classList.add('beat')}
+ for(const id of['heart','hm']){const h=$(id);h.classList.remove('beat');void h.getBoundingClientRect();h.classList.add('beat')}}
 
 // ---------- Conexión Bluetooth LE robusta ----------
 async function link(){const s=await dev.gatt.connect(),v=await s.getPrimaryService(SVC);
@@ -89,7 +116,7 @@ async function reconnect(){if(rc||!dev)return;rc=true;conn('warn','Reconectando�
  while(dev){try{await link();break}catch(e){await new Promise(r=>setTimeout(r,w));w=Math.min(w*1.5,4000)}}rc=false}
 function onRx(e){rx=performance.now();const m=new TextDecoder().decode(e.target.value);
  if(m==='P'){if(S.on)beat()}else if(m[0]==='S'){const[,b,o]=m.split(':');S.on=o==='1';
-  if(performance.now()-lastSend>1500)S.bpm=+b;ui()}}
+  if(performance.now()-lastSend>1500)S.bpm=+b;ui()}else if(m[0]==='M')monRx(m)}
 async function connect(){$('msg').textContent='';
  if(!navigator.bluetooth){$('msg').textContent='Este navegador no soporta Bluetooth. Usa Chrome en Android (o Bluefy en iPhone).';return}
  try{dev=await navigator.bluetooth.requestDevice({filters:[{services:[SVC]},{namePrefix:'CardioSim'}],optionalServices:[SVC]});demo=false;
@@ -124,6 +151,24 @@ function draw(){const r=devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;
   if(S.on)for(const b of beats)if(Math.abs(t-b)<.5)y+=tpl(t-b);
   y=h*.68-y*h*.5+(S.on?Math.sin(t*90)*.6:0);px?x.lineTo(px,y):x.moveTo(px,y)}
  x.stroke();requestAnimationFrame(draw)}
+/* ===== MONITOR (Proyecto 2): usa la MISMA conexión BLE del simulador ===== */
+const M={est:0,seg:60,n:0,dx:-1,col:'#a78bfa'};let mode='s',tabT=0;
+function monRx(m){const a=m.split(':');M.est=+a[1];M.seg=+a[2];M.n=+a[3];M.dx=+a[4];uiM();
+ const t=+a[5]?'m':'s';if(t!==mode&&performance.now()-tabT>2500)tab(t,1)}
+function uiM(){const{est,seg,n,dx}=M;M.col=est===2&&dx>=0?['#fbbf24','#34d399','#fb7185'][dx]:'#a78bfa';
+ $('mt').textContent=est===2?0:seg;$('rp').style.strokeDashoffset=est===1?326.7*(1-seg/60):0;
+ $('mf').textContent=est===0?'--':n;$('mu').textContent=est===2?'ppm':'pulsos';
+ $('ml').textContent=est===2?'Frecuencia cardiaca':'Pulsos contados';
+ $('md').textContent=est===2?N[dx]:est===1?'Midiendo…':'Listo';
+ $('ms').textContent=est===0?'Presiona START para medir':est===1?'Midiendo, no interrumpas la señal':'Medición completa';
+ if(mode==='m')document.body.style.setProperty('--c',M.col)}
+function tab(m,fromDev){mode=m;$('vs').hidden=m!=='s';$('vm').hidden=m!=='m';
+ $('tS').classList.toggle('on',m==='s');$('tM').classList.toggle('on',m==='m');
+ if(m==='m')document.body.style.setProperty('--c',M.col);else document.body.style.removeProperty('--c');
+ if(!fromDev){tabT=performance.now();send(m==='m'?'MODE:M':'MODE:S')}}
+$('tS').onclick=()=>tab('s');$('tM').onclick=()=>tab('m');
+$('mst').onclick=()=>{if(!chCmd){$('msg').textContent='Primero conecta el ESP32.';return}send('START')};
+uiM();
 ui();draw();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>
